@@ -4,7 +4,7 @@ import subprocess
 import dotbot
 
 
-class Brew(dotbot.Plugin):
+class Pip(dotbot.Plugin):
     _pipsi_directive = 'pipsi'
     _default_binary = 'pip'
 
@@ -12,7 +12,13 @@ class Brew(dotbot.Plugin):
         'pip',  # it is not the same as default binary.
         _pipsi_directive,
     ]
-
+    _default_values = {
+        'file': 'requirements.txt',
+        'binary': _default_binary,
+        'stdin': False,
+        'stdout': False,
+        'stderr': False,
+    }
     # API methods
 
     def can_handle(self, directive):
@@ -103,12 +109,14 @@ class Brew(dotbot.Plugin):
                 result = subprocess.call(
                     command,
                     shell=True,
-                    stdin=devnull,
-                    stdout=devnull,
-                    stderr=devnull,
+                    stdin=None if data.get('stdin', False) else devnull,
+                    stdout=None if data.get('stdout', False) else devnull,
+                    stderr=None if data.get('stderr', False) else devnull,
                     cwd=self.cwd,
                 )
 
                 if result not in [0, 1]:
-                    raise ValueError('Failed to install requirements.')
+                    self._log.warning("Not all pip packages installed.")
+                else:
+                    self._log.info("Finished installing pip packages.")
 
